@@ -1,7 +1,7 @@
 <?php
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *'); // ou o domínio autorizado
+header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
@@ -27,7 +27,14 @@ switch ($uri) {
             echo json_encode(['error' => 'Método não permitido']);
         }
         break;
-
+    case '/api/health':
+        if ($method === 'GET') {
+            echo json_encode(['status' => 'OK']);
+        } else {
+            http_response_code(405);
+            echo json_encode(['error' => 'Método não permitido']);
+        }
+        break;
     default:
         http_response_code(404);
         echo json_encode(['error' => 'Endpoint não encontrado']);
