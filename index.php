@@ -1,6 +1,6 @@
 <?php
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
@@ -11,32 +11,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/api/config/constants.php';
-require_once __DIR__ . '/api/routes/paymentRoutes.php';
 
+$route = $_GET['route'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-
-switch ($uri) {
-    case '/api/payment':
-        if ($method === 'POST') {
-            require_once __DIR__ . '/api/controllers/paymentController.php';
-            createPayment();
-        } else {
-            http_response_code(405);
-            echo json_encode(['error' => 'Método não permitido']);
-        }
-        break;
-    case '/api/health':
-        if ($method === 'GET') {
-            echo json_encode(['status' => 'OK']);
-        } else {
-            http_response_code(405);
-            echo json_encode(['error' => 'Método não permitido']);
-        }
+switch (true) {
+    case ($route === 'checkout' && $method === 'POST'):
+        require_once __DIR__ . '/api/controllers/CheckoutController.php';
+        $controller = new CheckoutController();
+        $request = json_decode(file_get_contents('php://input'), true);
+        $response = $controller->createCheckout($request);
+        echo json_encode($response);
         break;
     default:
         http_response_code(404);
-        echo json_encode(['error' => 'Endpoint não encontrado']);
+        echo json_encode(['error' => 'Route not found']);
         break;
 }
