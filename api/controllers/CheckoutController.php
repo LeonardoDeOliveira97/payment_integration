@@ -24,6 +24,7 @@ class CheckoutController
             $checkout = new CheckoutDTO();
             $checkout->id = $request['id'];
             $checkout->reference_id = $request['reference_id'];
+            $checkout->soft_descriptor = $request['soft_descriptor'];
             $checkout->redirect_url = $request['redirect_url'];
 
             // Expiration date (+3 days)
