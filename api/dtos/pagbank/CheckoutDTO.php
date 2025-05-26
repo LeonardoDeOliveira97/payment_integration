@@ -16,7 +16,7 @@ class CheckoutDTO
         return [
             'id' => $this->id,
             'reference_id' => $this->reference_id,
-            'expiration_date' => $this->expiration_date->format(DateTime::ATOM),
+            'expiration_date' => $this->expiration_date,
             'customer' => $this->customer->toArray(),
             'items' => array_map(fn($item) => $item->toArray(), $this->items),
             'redirect_url' => $this->redirect_url,

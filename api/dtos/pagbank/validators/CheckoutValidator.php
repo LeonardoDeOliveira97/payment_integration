@@ -8,16 +8,12 @@ class CheckoutValidator extends Validator
 {
     public static function validate($data)
     {
-        self::validateRequiredFields($data, ['reference_id', 'expiration_date', 'customer', 'items']);
+        self::validateRequiredFields($data, ['reference_id', 'customer', 'items']);
 
         if (gettype($data) === 'object') {
-            self::validateDateTime($data->expiration_date);
             self::validateCustomer($data->customer);
-            
             self::validateItems($data->items);
-
         } else if (gettype($data) === 'array') {
-            self::validateDateTime($data['expiration_date']);
             self::validateCustomer($data['customer']);
             self::validateItems($data['items']);
         }

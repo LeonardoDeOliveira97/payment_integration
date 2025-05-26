@@ -10,7 +10,6 @@ require_once __DIR__ . '../../utils/Util.php';
 
 class CheckoutController
 {
-
     private $pagbankService;
 
     public function __construct()
@@ -25,8 +24,14 @@ class CheckoutController
             $checkout = new CheckoutDTO();
             $checkout->id = $request['id'];
             $checkout->reference_id = $request['reference_id'];
-            $checkout->expiration_date = new DateTime($request->expiration_date);
             $checkout->redirect_url = $request['redirect_url'];
+
+            // Expiration date (+3 days)
+            $date = new DateTime('now', new DateTimeZone('America/Sao_Paulo'));
+            $date->modify('+3 days');
+            $expiration_date = $date->format('c');
+
+            $checkout->expiration_date =  $expiration_date;
 
             $customer = new CustomerDTO();
             $customer->name = $request['customer']['name'];
