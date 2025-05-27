@@ -12,4 +12,13 @@ class Util
             throw new Exception("O valor '$value' não é numérico.");
         }
     }
+
+    public static function calculateDiscountAmount($subtotal, $discountPercentage)
+    {
+        if ($discountPercentage < 0 || $discountPercentage > 100) {
+            throw new Exception("Porcentagem de desconto deve estar entre 0 e 100.");
+        }
+
+        return (int) round($subtotal * ($discountPercentage / 100));
+    }
 }

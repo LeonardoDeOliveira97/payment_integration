@@ -27,6 +27,17 @@ switch (true) {
         http_response_code(405);
         echo json_encode(['error' => 'Method not allowed']);
         break;
+    case ($route === 'notifications' && $method === 'POST'):
+        require_once __DIR__ . '/api/controllers/NotificationController.php';
+        $controller = new NotificationController();
+        $request = json_decode(file_get_contents('php://input'), true);
+        $response = $controller->handleNotification($request);
+        echo json_encode($response);
+        break;
+    case ($route === 'notifications' && $method === 'GET'):
+        http_response_code(405);
+        echo json_encode(['error' => 'Method not allowed']);
+        break;
     default:
         http_response_code(404);
         echo json_encode(['error' => 'Route not found']);

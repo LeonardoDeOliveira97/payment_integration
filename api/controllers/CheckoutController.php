@@ -5,6 +5,8 @@ require_once __DIR__ . '../../services/PagBankService.php';
 require_once __DIR__ . '../../dtos/pagbank/CheckoutDTO.php';
 require_once __DIR__ . '../../dtos/pagbank/CustomerDTO.php';
 require_once __DIR__ . '../../dtos/pagbank/ItemDTO.php';
+require_once __DIR__ . '../../dtos/pagbank/PaymentMethodDTO.php';
+require_once __DIR__ . '../../dtos/pagbank/PaymentMethodConfigDTO.php';
 require_once __DIR__ . '../../config/HttpResponses.php';
 require_once __DIR__ . '../../utils/Util.php';
 
@@ -24,6 +26,7 @@ class CheckoutController
             $checkout = new CheckoutDTO();
             $checkout->id = $request['id'];
             $checkout->reference_id = $request['reference_id'];
+            $checkout->discount_amount = $request['discount_amount'] ?? 0;
             $checkout->soft_descriptor = $request['soft_descriptor'];
             $checkout->redirect_url = $request['redirect_url'];
 
@@ -34,6 +37,7 @@ class CheckoutController
 
             $checkout->expiration_date =  $expiration_date;
 
+            // Customer information
             $customer = new CustomerDTO();
             $customer->name = $request['customer']['name'];
             $customer->email = $request['customer']['email'];
@@ -53,6 +57,70 @@ class CheckoutController
                     $itemDTO->image_url = $item['image_url'];
 
                     $checkout->addItem($itemDTO);
+                }
+            }
+
+            // Payment methods
+            if (isset($request['payment_methods']) && is_array($request['payment_methods']) && count($request['payment_methods']) > 0) {
+
+                $subtotal = 0;
+                // Calculate the subtotal of items
+                foreach ($checkout->items as $item) {
+                    $subtotal += $item->unit_amount * $item->quantity;
+                }
+
+                foreach ($request['payment_methods'] as $paymentMethod) {
+                    // Debit card
+                    if ($paymentMethod['type'] === 'D') {
+                        $paymentMethodDTO = new PaymentMethodDTO();
+                        $paymentMethodDTO->type = 'DEBIT_CARD';
+                        $paymentMethodDTO->addDefaultBrands();
+
+                        $checkout->addPaymentMethod($paymentMethodDTO);
+
+                        // Calculate the discount amount for debit card
+                        $checkout->discount_amount = Util::calculateDiscountAmount($subtotal, $request['discount_percentage'] ?? 0);
+                    }
+
+                    // PIX
+                    else  if ($paymentMethod['type'] === 'P') {
+                        $paymentMethodDTO = new PaymentMethodDTO();
+                        $paymentMethodDTO->type = 'PIX';
+
+                        $checkout->addPaymentMethod($paymentMethodDTO);
+
+                        // Calculate the discount amount for PIX
+                        $checkout->discount_amount = Util::calculateDiscountAmount($subtotal, $request['discount_percentage'] ?? 0);
+                    }
+
+                    // Credit card
+                    else if ($paymentMethod['type'] === 'C') {
+                        $paymentMethodDTO = new PaymentMethodDTO();
+                        $paymentMethodDTO->type = 'CREDIT_CARD';
+                        $paymentMethodDTO->addDefaultBrands();
+
+                        $checkout->addPaymentMethod($paymentMethodDTO);
+
+                        if (isset($paymentMethod['config_options']) && is_array($paymentMethod['config_options'])) {
+                            foreach ($paymentMethod['config_options'] as $option) {
+                                $config = new PaymentMethodConfigDTO();
+                                $config->type = 'CREDIT_CARD';
+
+                                $config->addConfigOption($option['option'], $option['value']);
+                                $checkout->addPaymentMethodConfig($config);
+                            }
+                        }
+                    }
+
+                    // Boleto
+                    else if ($paymentMethod['type'] === 'B') {
+                        $paymentMethodDTO = new PaymentMethodDTO();
+                        $paymentMethodDTO->type = 'BOLETO';
+
+                        $checkout->addPaymentMethod($paymentMethodDTO);
+                    } else {
+                        throw new Exception("Invalid payment method type: " . $paymentMethod['type']);
+                    }
                 }
             }
 
